@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FuseRing Astrolabe keyring: CAD inspector</title>
+<meta name="description" content="Inspect the FuseRing astrolabe keyring in 3D and plan view, check it against the 80 x 80 x 6 mm limits, and download the STEP, STL and source SVG.">
+<link rel="stylesheet" href="assets/sheet.css">
+<link rel="modulepreload" href="assets/three-bundle.min.js">
+<link rel="modulepreload" href="assets/viewer.js">
+<link rel="modulepreload" href="assets/ui.js">
+<style>
+  :root { --accent: oklch(68% 0.1 195); --accent-ink: oklch(42% 0.09 195); --accent-wash: oklch(93% 0.035 195); }
+  [hidden] { display: none !important; }
+  #flat svg { width: 100%; height: 100%; display: block; }
+  tbody tr { cursor: default; }
+  tbody tr:hover { background: transparent; }
+</style>
+</head>
+<body>
+<a class="skip" href="#model">Skip to the keyring viewer</a>
+
+<header class="titleblock">
+  <div class="name">
+    <h1>FuseRing Astrolabe</h1>
+    <p>A parametric astrolabe keyring modeled with OpenCascade (build123d).</p>
+  </div>
+  <div class="cell"><span class="k">Size</span><span class="v" id="tb-size">loading</span></div>
+  <div class="cell"><span class="k">Key hole</span><span class="v" id="tb-hole">loading</span></div>
+  <div class="cell"><span class="k">Solid valid</span><span class="v" id="tb-valid">loading</span></div>
+  <div class="cell"><span class="k">Source</span><a class="v" href="https://github.com/draarivpatel-ui/fusering-compass">GitHub repo</a></div>
+</header>
+
+<nav class="nav" aria-label="Page sections">
+  <a href="#model">Viewer</a>
+  <a href="#limits">Limits</a>
+  <a href="#files">Downloads</a>
+  <a href="#notes">Notes</a>
+</nav>
+
+<main>
+  <section class="stage" id="model" aria-label="Keyring viewer">
+    <div class="stage-grid">
+      <div class="viewport">
+        <div class="toolbar">
+          <div class="seg" id="modes" role="tablist" aria-label="Viewer mode">
+            <button type="button" role="tab" data-tab="d3" aria-selected="true">3D</button>
+            <button type="button" role="tab" data-tab="d2" aria-selected="false">Plan</button>
+          </div>
+          <span class="sep" id="sep1"></span>
+          <div class="seg" id="views" aria-label="Camera view">
+            <button type="button" data-view="iso">Iso</button>
+            <button type="button" data-view="top">Top</button>
+            <button type="button" data-view="front">Front</button>
+            <button type="button" data-view="side">Side</button>
+          </div>
+          <button type="button" class="btn" id="wire" aria-pressed="false">Wireframe</button>
+        </div>
+        <div class="canvas" id="canvas">
+          <div class="gl" id="gl"></div>
+          <div class="gl" id="flat" hidden><svg id="plan" role="img" aria-label="Plan outline of the keyring with its through hole, measured from the STEP file"></svg></div>
+          <div class="fallback" id="fallback"><p>The 3D view needs WebGL and a web server. Use the Plan tab or the downloads below.</p></div>
+          <div class="hint" id="hint">Drag to orbit, scroll to zoom, arrow keys to pan</div>
+          <div class="legend" id="legend" hidden>
+            <span><i style="background: var(--color-paper-3)"></i>Flat base</span>
+            <span><i style="background: var(--accent-wash)"></i>Raised relief</span>
+            <span><i style="background: var(--color-paper)"></i>Through hole</span>
+          </div>
+        </div>
+      </div>
+      <aside class="inspector" aria-live="polite">
+        <div>
+          <h2>Keyring</h2>
+          <p class="sub">Measured from the STEP file in this repo.</p>
+        </div>
+        <dl class="kv" id="insp-kv"></dl>
+        <ul class="checks" id="insp-checks"></ul>
+      </aside>
+    </div>
+  </section>
+
+  <section id="limits">
+    <div class="wrap">
+      <div class="head"><h2>Limits</h2><p id="limits-note">Measured values against the limits stated in the README.</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th class="num">Measured</th><th class="num">Limit</th><th class="num">Margin</th><th>Result</th></tr></thead>
+          <tbody id="limit-rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="files">
+    <div class="wrap">
+      <div class="head"><h2>Downloads</h2><p>SHA-256 values are computed in your browser from the files this page serves.</p></div>
+      <div class="bench" id="bench"></div>
+    </div>
+  </section>
+
+  <section id="notes">
+    <div class="wrap">
+      <div class="head"><h2>Notes</h2><p>Where the numbers on this page come from.</p></div>
+      <div class="notes">
+        <div class="note"><h3>Measured, not typed</h3><p>Bounding box, volume, plan outline and hole size in <code>assets/model.json</code> come from reading the STEP file with build123d and shapely (<code>tools/inspect_cad.py</code>).</p></div>
+        <div class="note"><h3>How it is built</h3><p>A 3 mm flat base carries a 1.5 mm raised relief of rings, an octagon and a cross, then the key hole is cut through the lug. <code>generate_keyring.py</code> writes the STEP and STL. The script defines these shapes in code and does not read the SVG, which is shipped alongside as the 2D artwork.</p></div>
+        <div class="note"><h3>Plan accuracy</h3><p>Curves in the plan view are drawn as many short straight segments, so the drawing is an approximation of the true arcs. The size and volume figures come from the exact STEP solid.</p></div>
+        <div class="note"><h3>Open it locally</h3><p>This page loads JSON and ES modules, so serve the folder (for example <code>python3 -m http.server</code>) instead of opening the file directly.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>FuseRing Astrolabe vector-to-CAD keyring.</span>
+    <span>three.js is vendored under its MIT license, IBM Plex under the SIL OFL. Licenses are in assets/.</span>
+  </div>
+</footer>
+
+<script type="module">
+import { createViewer } from "./assets/viewer.js";
+import { h, svg, num, kv, tabs, bench } from "./assets/ui.js";
+
+const $ = (s) => document.querySelector(s);
+
+try {
+  const m = await fetch("assets/model.json").then((r) => r.json());
+  const lim = m.limits_mm;
+  const hole = m.holes[0];
+  const ok = m.valid && m.solids === 1;
+
+  // ---- title block
+  $("#tb-size").textContent = `${num(m.size[0], 1)} x ${num(m.size[1], 1)} x ${num(m.size[2], 1)} mm`;
+  $("#tb-hole").textContent = hole ? `${num(hole.diameter, 1)} mm` : "none";
+  $("#tb-valid").textContent = ok ? "yes, 1 solid" : "check";
+
+  // ---- 3D viewer
+  const viewer = await createViewer($("#gl"), {
+    meshes: [{ key: "ring", url: "fusering_astrolabe_keyring.stl", color: "--accent" }],
+    label: "FuseRing astrolabe keyring",
+  });
+  if (!viewer) {
+    $("#fallback").classList.add("show");
+    ["#views", "#wire", "#hint", "#sep1"].forEach((s) => ($(s).hidden = true));
+  } else {
+    document.querySelectorAll("#views button").forEach((b) => b.addEventListener("click", () => viewer.frame(b.dataset.view)));
+    $("#wire").addEventListener("click", (e) => {
+      const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+      e.currentTarget.setAttribute("aria-pressed", on);
+      viewer.setWireframe(on);
+    });
+  }
+
+  // ---- plan view (STEP coordinates, y up, so flip y for SVG)
+  const ring = (pts) => "M" + pts.map(([x, y], i) => `${i ? "L" : ""}${x.toFixed(3)} ${(-y).toFixed(3)}`).join(" ") + "Z";
+  const planSvg = $("#plan");
+  planSvg.setAttribute("viewBox", "-34 -32 76 68");
+  planSvg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  const kids = [];
+  if (m.bottom) {
+    kids.push(svg("path", { d: [m.bottom.outer, ...m.bottom.holes].map(ring).join(" "), "fill-rule": "evenodd", style: "fill:var(--color-paper-3)", class: "ink", "stroke-width": 1.4, "stroke-linejoin": "round" }));
+  }
+  m.plan.forEach((s) => kids.push(svg("path", { d: [s.outer, ...s.holes].map(ring).join(" "), "fill-rule": "evenodd", style: "fill:var(--accent-wash);fill-opacity:.85", class: "ink", "stroke-width": 1.2, "stroke-linejoin": "round" })));
+  m.holes.forEach((c) => {
+    kids.push(svg("circle", { cx: c.cx, cy: -c.cy, r: c.diameter / 2, style: "fill:var(--color-paper)", class: "ink", "stroke-width": 1.4 }));
+    kids.push(svg("text", { x: c.cx, y: -c.cy + 13.5, "text-anchor": "middle", style: "font-size:1.2px" }, `hole ${num(c.diameter, 1)} mm`));
+  });
+  kids.push(svg("text", { x: (m.bbox_min[0] + m.bbox_max[0]) / 2, y: -m.bbox_min[1] + 5, "text-anchor": "middle", style: "font-size:1.3px" }, `${num(m.size[0], 1)} x ${num(m.size[1], 1)} mm`));
+  planSvg.replaceChildren(...kids);
+
+  tabs($("#modes"), { d3: $("#gl"), d2: $("#flat") }, (id) => {
+    $("#legend").hidden = id !== "d2";
+    $("#hint").hidden = id !== "d3" || !viewer;
+    if (viewer) { $("#views").hidden = id !== "d3"; $("#wire").hidden = id !== "d3"; $("#sep1").hidden = id !== "d3"; }
+  });
+
+  // ---- limits
+  const fitsAll = m.size[0] <= lim.x && m.size[1] <= lim.y && m.size[2] <= lim.z;
+  const holeOk = !hole || hole.diameter >= lim.min_hole;
+
+  kv($("#insp-kv"), [
+    ["Length X", `${num(m.size[0], 2)} mm`],
+    ["Width Y", `${num(m.size[1], 2)} mm`],
+    ["Height Z", `${num(m.size[2], 2)} mm`],
+    ["Volume", `${num(m.volume_mm3, 1)} mm3`],
+    ["Faces", String(m.faces)],
+    ["Solids", String(m.solids)],
+    ["Key hole", hole ? `${num(hole.diameter, 2)} mm at X ${num(hole.cx, 1)}, Y ${num(hole.cy, 1)}` : "none"],
+  ]);
+  if (viewer) {
+    const st = viewer.stats("ring");
+    $("#insp-kv").append(h("dt", { text: "STL triangles" }), h("dd", { text: String(st.triangles) }));
+  }
+  const badge = (good, label) => h("span", { class: `badge ${good ? "ok" : "flag"}`, text: good ? "OK" : "FLAG" }, "");
+  $("#insp-checks").replaceChildren(
+    h("li", {}, badge(ok), "STEP is one valid solid"),
+    h("li", {}, badge(fitsAll), fitsAll ? `Fits ${lim.x} x ${lim.y} x ${lim.z} mm` : `Exceeds ${lim.x} x ${lim.y} x ${lim.z} mm`),
+    h("li", {}, badge(holeOk), holeOk ? `Hole is at least ${num(lim.min_hole, 1)} mm` : `Hole is under ${num(lim.min_hole, 1)} mm`),
+  );
+
+  const row = (name, value, limitText, margin, good) => h("tr", {},
+    h("td", { text: name }),
+    h("td", { class: "num", text: value }),
+    h("td", { class: "num", text: limitText }),
+    h("td", { class: "num", text: margin }),
+    h("td", {}, h("span", { class: `badge ${good ? "ok" : "flag"}`, text: good ? "within" : "over" })));
+  $("#limit-rows").replaceChildren(
+    row("Length X", `${num(m.size[0], 2)} mm`, `max ${lim.x} mm`, `${num(lim.x - m.size[0], 2)} mm`, m.size[0] <= lim.x),
+    row("Width Y", `${num(m.size[1], 2)} mm`, `max ${lim.y} mm`, `${num(lim.y - m.size[1], 2)} mm`, m.size[1] <= lim.y),
+    row("Height Z", `${num(m.size[2], 2)} mm`, `max ${lim.z} mm`, `${num(lim.z - m.size[2], 2)} mm`, m.size[2] <= lim.z),
+    ...(hole ? [row("Key hole diameter", `${num(hole.diameter, 2)} mm`, `min ${num(lim.min_hole, 1)} mm`, `${num(hole.diameter - lim.min_hole, 2)} mm`, holeOk)] : []),
+  );
+
+  // ---- downloads (hashes computed from the served bytes)
+  const groups = [
+    { title: "CAD", files: [
+      { path: m.file, desc: "Keyring solid, STEP" },
+      { path: "fusering_astrolabe_keyring.stl", desc: "Mesh for slicers and the viewer" },
+    ] },
+    { title: "Source", files: [
+      { path: "fusering_astrolabe_keyring.svg", desc: "2D astrolabe vector artwork shipped with the CAD" },
+      { path: "generate_keyring.py", desc: "build123d script that writes the STEP and STL" },
+      { path: "fusering_keyring_cad.png", desc: "Reference render" },
+    ] },
+  ];
+  const manifest = [];
+  if (globalThis.crypto?.subtle) {
+    await Promise.all(groups.flatMap((g) => g.files).map(async (f) => {
+      try {
+        const buf = await fetch(f.path).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(f.path))));
+        const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map((b) => b.toString(16).padStart(2, "0")).join("");
+        manifest.push({ path: f.path, bytes: buf.byteLength, sha256: hex });
+      } catch (e) { console.warn("no hash for", f.path); }
+    }));
+  }
+  bench($("#bench"), groups, manifest);
+} catch (err) {
+  $("#limits-note").textContent = "Could not load the model data. Serve this folder over HTTP and reload.";
+  console.error(err);
+}
+</script>
+</body>
+</html>

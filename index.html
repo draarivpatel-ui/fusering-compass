@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FuseRing Astrolabe keyring: CAD inspector</title>
 <meta name="description" content="Inspect the FuseRing astrolabe keyring in 3D and plan view, check it against the 80 x 80 x 6 mm limits, and download the STEP, STL and source SVG.">
+<meta property="og:title" content="FuseRing Astrolabe keyring: CAD inspector">
+<meta property="og:description" content="Inspect the FuseRing astrolabe keyring in 3D and plan view, check it against the 80 x 80 x 6 mm limits, and download the STEP, STL and source SVG.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://aariv.me/fusering-compass/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d3557'/%3E%3Cpolygon points='16,5 20,16 16,27 12,16' fill='%23fbf8f1'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/sheet.css">
 <link rel="modulepreload" href="assets/three-bundle.min.js">
 <link rel="modulepreload" href="assets/viewer.js">
@@ -18,7 +24,7 @@
 </style>
 </head>
 <body>
-<a class="skip" href="#model">Skip to the keyring viewer</a>
+<a class="skip-link skip" href="#main-content">Skip to main content</a>
 
 <header class="titleblock">
   <div class="name">
@@ -38,7 +44,7 @@
   <a href="#notes">Notes</a>
 </nav>
 
-<main>
+<main id="main-content">
   <section class="stage" id="model" aria-label="Keyring viewer">
     <div class="stage-grid">
       <div class="viewport">
@@ -109,6 +115,7 @@
       </div>
     </div>
   </section>
+<noscript><p style="padding:16px">This page draws the keyring from JSON with JavaScript. The STEP, STL and SVG downloads work without it.</p></noscript>
 </main>
 
 <footer>

@@ -2,8 +2,10 @@ import math
 from pathlib import Path
 from build123d import *
 
-bake_dir = Path("/Users/aarivpatel/Hub/personal/Contest Submissions 2026-2027/Hark-Hackathons/repos/bakebuild-cutters")
-fuse_dir = Path("/Users/aarivpatel/Hub/personal/Contest Submissions 2026-2027/Hark-Hackathons/repos/fusering-compass")
+# Both repos are expected to sit side by side in one parent folder.
+repos_dir = Path(__file__).resolve().parent.parent
+bake_dir = repos_dir / "bakebuild-cutters"
+fuse_dir = repos_dir / "fusering-compass"
 
 # 1. Cutter 1: Hexagonal Honeycomb Molecule Cutter (82 x 76 x 18 mm)
 with BuildPart() as c1:

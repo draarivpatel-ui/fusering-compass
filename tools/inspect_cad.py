@@ -3,15 +3,13 @@
 Everything in model.json is measured from the STEP geometry (bounding box, volume, plan outlines,
 wall thickness). Nothing here is typed in by hand except the part labels.
 
-Run with a Python that has build123d and shapely installed:  python tools/inspect_cad.py
+Run with a Python that has build123d installed:  python tools/inspect_cad.py
 """
 import json
-import math
 from pathlib import Path
 
-from build123d import Axis, import_step
+from build123d import import_step
 from OCP.BRepTools import BRepTools_WireExplorer
-from shapely.geometry import LinearRing, Polygon
 
 ROOT = Path(__file__).resolve().parent.parent
 STEP = ROOT / "fusering_astrolabe_keyring.step"
@@ -63,16 +61,6 @@ def hole_info(pts):
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     return dict(cx=round((min(xs) + max(xs)) / 2, 3), cy=round((min(ys) + max(ys)) / 2, 3),
                 diameter=round(max(xs) - min(xs), 3))
-
-
-def wall_stats(top_face):
-    outer = Polygon(top_face["outer"])
-    inner = Polygon(top_face["holes"][0])
-    ring_o, ring_i = LinearRing(top_face["outer"]), LinearRing(top_face["holes"][0])
-    from shapely.geometry import Point
-    ds = [ring_i.distance(Point(p)) for p in top_face["outer"]] + [ring_o.distance(Point(p)) for p in top_face["holes"][0]]
-    mean = (outer.area - inner.area) / ((outer.exterior.length + inner.exterior.length) / 2)
-    return dict(min=round(min(ds), 3), mean=round(mean, 3))
 
 
 def describe(shape):

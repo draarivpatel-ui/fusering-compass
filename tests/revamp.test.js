@@ -48,6 +48,47 @@ test('ui.js number formatting handles edge inputs', async () => {
   assert.equal(ui.fmtBytes(3896), '3.8 KB');
 });
 
+test('ui.js exposes every helper the page imports, plus Home/End tab keys', async () => {
+  const src = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8');
+  const ui = await import('data:text/javascript;charset=utf-8,' + encodeURIComponent(src));
+  for (const name of ['h', 'svg', 'num', 'mm', 'fmtBytes', 'copy', 'kv', 'tabs', 'bench', 'safePath']) {
+    assert.equal(typeof ui[name], 'function', `ui.js missing export ${name}`);
+  }
+  assert.match(src, /e\.key\s*===\s*"Home"[\s\S]{0,90}"End"/, 'tablist lost Home/End keys');
+});
+
+test('download hrefs are confined to same-origin relative paths', async () => {
+  const src = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8');
+  const ui = await import('data:text/javascript;charset=utf-8,' + encodeURIComponent(src));
+  for (const good of ['fusering_astrolabe_keyring.step', 'assets/model.json', 'gerbers/a-b_c.zip']) {
+    assert.equal(ui.safePath(good), good, `safe path rejected: ${good}`);
+  }
+  for (const bad of ['javascript:window.__x=1', 'https://evil.example/x', '../../etc/passwd', '/abs/path', 'a b.step', 'C:\\tmp\\x', '', '.hidden', null, 42, {}]) {
+    assert.equal(ui.safePath(bad), null, `unsafe path allowed: ${JSON.stringify(bad)}`);
+  }
+});
+
+test('downloads bench renders even when model.json fails to load', () => {
+  const firstCatch = html.indexOf('} catch (err)');
+  const secondTry = html.indexOf('try {', firstCatch);
+  const benchCall = html.indexOf('bench($("#bench")');
+  assert.ok(firstCatch > 0, 'model-loading try/catch missing');
+  assert.ok(secondTry > firstCatch && benchCall > secondTry, 'bench is still inside the model-loading try');
+});
+
+test('notes credit only build123d; hole label stays inside the lug; fallback yields to plan tab', () => {
+  assert.ok(!html.includes('and shapely'), 'stale shapely claim still present');
+  assert.ok(!html.includes('-c.cy + 13.5'), 'hole label still floats below the lug');
+  assert.match(html, /y:\s*-c\.cy\s*\+\s*8\b/, 'hole label offset changed unexpectedly');
+  assert.match(html, /classList\.toggle\("show",\s*id\s*===\s*"d3"\s*&&\s*!viewer\)/, 'fallback not gated to the 3D tab');
+});
+
+test('generator resolves its own directory instead of hardcoding the repo name', () => {
+  const gen = fs.readFileSync(path.join(root, 'generate_keyring.py'), 'utf8');
+  assert.match(gen, /fuse_dir\s*=\s*Path\(__file__\)/, 'fuse_dir still depends on the directory name');
+  assert.ok(!/fuse_dir\s*=\s*repos_dir\s*\/\s*"fusering-compass"/.test(gen));
+});
+
 test('3D viewer failure path cannot take the whole page down', () => {
   assert.match(html, /try\s*\{\s*viewer\s*=\s*await\s+createViewer/, 'createViewer must be called inside try/catch');
   assert.match(html, /catch\s*\(err\)[\s\S]{0,200}3D viewer unavailable/, 'catch must warn instead of propagating');

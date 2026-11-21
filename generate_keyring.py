@@ -7,7 +7,7 @@ from build123d import *
 # not checked out next to this one; the keyring below is always generated.
 repos_dir = Path(__file__).resolve().parent.parent
 bake_dir = repos_dir / "bakebuild-cutters"
-fuse_dir = repos_dir / "fusering-compass"
+fuse_dir = Path(__file__).resolve().parent
 
 if bake_dir.is_dir():
     # 1. Cutter 1: Hexagonal Honeycomb Molecule Cutter (82 x 76 x 18 mm)

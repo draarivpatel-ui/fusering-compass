@@ -15,12 +15,14 @@
 <link rel="modulepreload" href="assets/three-bundle.min.js">
 <link rel="modulepreload" href="assets/viewer.js">
 <link rel="modulepreload" href="assets/ui.js">
+<link rel="modulepreload" href="assets/keyring-lab.js">
+<link rel="modulepreload" href="assets/lab-ui.js">
 <style>
   :root { --accent: oklch(68% 0.1 195); --accent-ink: oklch(42% 0.09 195); --accent-wash: oklch(93% 0.035 195); }
   [hidden] { display: none !important; }
   #flat svg { width: 100%; height: 100%; display: block; }
-  tbody tr { cursor: default; }
-  tbody tr:hover { background: transparent; }
+  #limits tbody tr { cursor: default; }
+  #limits tbody tr:hover { background: transparent; }
 </style>
 </head>
 <body>
@@ -39,6 +41,7 @@
 <nav class="nav" aria-label="Page sections">
   <a href="#model">Viewer</a>
   <a href="#limits">Limits</a>
+  <a href="#lab">DFM lab</a>
   <a href="#files">Downloads</a>
   <a href="#notes">Notes</a>
 </nav>
@@ -92,6 +95,66 @@
           <thead><tr><th>Feature</th><th class="num">Measured</th><th class="num">Limit</th><th class="num">Margin</th><th>Result</th></tr></thead>
           <tbody id="limit-rows"></tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="lab">
+    <div class="wrap">
+      <div class="head"><h2>DFM and lug mechanics lab</h2><p>Every value is computed live in this page from <code>assets/model.json</code>, the measured STEP geometry.</p></div>
+      <p id="lab-unavail" hidden>The lab could not start. Serve this folder over HTTP and reload.</p>
+
+      <div class="lab-controls">
+        <label for="lab-load">Carabiner pull load</label>
+        <input type="range" id="lab-load" min="5" max="150" step="1" value="45" aria-label="Pull load in newtons">
+        <input type="number" id="lab-load-n" min="5" max="150" step="1" value="45" aria-label="Pull load value in newtons">
+        <span class="data" id="lab-load-v">45 N</span>
+        <label for="lab-proc" class="lab-proc-label">Process</label>
+        <select id="lab-proc" aria-label="Fabrication process"></select>
+      </div>
+
+      <dl class="lab-lug" id="lab-lug-kv" aria-label="Measured carabiner lug geometry"></dl>
+
+      <div class="table-wrap">
+        <table id="lab-procs">
+          <thead>
+            <tr>
+              <th>Process</th><th class="num">Mass g</th><th class="num">Ligament mm2</th>
+              <th class="num">SF bearing</th><th class="num">SF tear-out</th><th class="num">SF net</th>
+              <th>Governing</th><th class="num">Min margin mm</th><th>Relief fidelity</th>
+            </tr>
+          </thead>
+          <tbody id="lab-proc-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="lab-grid">
+        <figure class="chart">
+          <figcaption>Lug pull load vs safety factor (log scale)</figcaption>
+          <svg id="chart-sf" viewBox="0 0 660 400" role="img" aria-label="Safety factor versus pull load for each fabrication process"></svg>
+          <div class="chart-legend" id="chart-sf-legend"></div>
+          <p class="chart-readout data" id="chart-sf-readout"></p>
+        </figure>
+        <figure class="chart">
+          <figcaption>Z-layer relief mass and cross-section profile</figcaption>
+          <svg id="chart-z" viewBox="0 0 660 400" role="img" aria-label="Bar chart of base plate and relief cross-section areas, solid volumes and mass split"></svg>
+          <p class="chart-readout data" id="chart-z-readout"></p>
+        </figure>
+      </div>
+
+      <div class="lab-brief">
+        <div class="lab-btns">
+          <button type="button" class="btn" id="lab-json">Download JSON</button>
+          <button type="button" class="btn" id="lab-csv">Download CSV</button>
+          <button type="button" class="btn" id="lab-md">Download Markdown</button>
+          <button type="button" class="btn" id="lab-verify">Verify digest</button>
+          <button type="button" class="btn" id="lab-tamper">1-unit tamper demo</button>
+          <button type="button" class="btn primary" id="lab-tests">Run self-tests</button>
+        </div>
+        <p class="data lab-digest" id="lab-digest">sha256 pending</p>
+        <p id="lab-verify-out" role="status"></p>
+        <p id="lab-test-summary" class="data"></p>
+        <ol class="lab-test-list" id="lab-test-list"></ol>
       </div>
     </div>
   </section>
@@ -259,5 +322,6 @@ try {
   console.error("downloads section:", err);
 }
 </script>
+<script type="module" src="./assets/lab-ui.js"></script>
 </body>
 </html>

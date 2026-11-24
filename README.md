@@ -24,7 +24,7 @@ ESM module with no DOM, network, clock, or randomness). Everything is recomputed
   JSON, formula-safe CSV, and Markdown exports identically; verify-digest and one-unit tamper
   demo controls included.
 - Fail-closed `#frlab=` URL hash codec restores process and load state across reloads.
-- 27 deterministic self-tests run in the page; `npm test` runs 399 `node --test` checks
+- 27 deterministic self-tests run in the page; `npm test` runs 401 `node --test` checks
   (SHA-256 KATs and a 0..160 byte boundary sweep vs Node `crypto`, canonicalization, real
   model geometry cross-checks, lug stress and load monotonicity, hostile codec probes,
   CSV formula-injection escaping, digest parity, and DOM wiring).

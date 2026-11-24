@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'assets/sheet.css'), 'utf8');
 const viewerSrc = fs.readFileSync(path.join(root, 'assets/viewer.js'), 'utf8');
+const bootSrc = fs.readFileSync(path.join(root, 'assets/boot.js'), 'utf8');
 
 const TEXT_EXT = new Set(['.md', '.html', '.css', '.js', '.py', '.csv', '.json', '.svg', '.txt', '.step', '.ino']);
 function* walk(dir) {
@@ -69,18 +70,19 @@ test('download hrefs are confined to same-origin relative paths', async () => {
 });
 
 test('downloads bench renders even when model.json fails to load', () => {
-  const firstCatch = html.indexOf('} catch (err)');
-  const secondTry = html.indexOf('try {', firstCatch);
-  const benchCall = html.indexOf('bench($("#bench")');
+  const firstCatch = bootSrc.indexOf('} catch (err)');
+  const secondTry = bootSrc.indexOf('try {', firstCatch);
+  const benchCall = bootSrc.indexOf('bench($("#bench")');
   assert.ok(firstCatch > 0, 'model-loading try/catch missing');
   assert.ok(secondTry > firstCatch && benchCall > secondTry, 'bench is still inside the model-loading try');
 });
 
 test('notes credit only build123d; hole label stays inside the lug; fallback yields to plan tab', () => {
-  assert.ok(!html.includes('and shapely'), 'stale shapely claim still present');
-  assert.ok(!html.includes('-c.cy + 13.5'), 'hole label still floats below the lug');
-  assert.match(html, /y:\s*-c\.cy\s*\+\s*8\b/, 'hole label offset changed unexpectedly');
-  assert.match(html, /classList\.toggle\("show",\s*id\s*===\s*"d3"\s*&&\s*!viewer\)/, 'fallback not gated to the 3D tab');
+  const pageCode = html + '\n' + bootSrc;
+  assert.ok(!pageCode.includes('and shapely'), 'stale shapely claim still present');
+  assert.ok(!pageCode.includes('-c.cy + 13.5'), 'hole label still floats below the lug');
+  assert.match(bootSrc, /y:\s*-c\.cy\s*\+\s*8\b/, 'hole label offset changed unexpectedly');
+  assert.match(bootSrc, /classList\.toggle\("show",\s*id\s*===\s*"d3"\s*&&\s*!viewer\)/, 'fallback not gated to the 3D tab');
 });
 
 test('generator resolves its own directory instead of hardcoding the repo name', () => {
@@ -90,8 +92,8 @@ test('generator resolves its own directory instead of hardcoding the repo name',
 });
 
 test('3D viewer failure path cannot take the whole page down', () => {
-  assert.match(html, /try\s*\{\s*viewer\s*=\s*await\s+createViewer/, 'createViewer must be called inside try/catch');
-  assert.match(html, /catch\s*\(err\)[\s\S]{0,200}3D viewer unavailable/, 'catch must warn instead of propagating');
+  assert.match(bootSrc, /try\s*\{\s*viewer\s*=\s*await\s+createViewer/, 'createViewer must be called inside try/catch');
+  assert.match(bootSrc, /catch\s*\(err\)[\s\S]{0,200}3D viewer unavailable/, 'catch must warn instead of propagating');
 });
 
 test('viewer.js falls back instead of rendering black on a missing CSS token', () => {
@@ -99,7 +101,7 @@ test('viewer.js falls back instead of rendering black on a missing CSS token', (
 });
 
 test('no innerHTML-style injection sinks anywhere in the page or shared JS', () => {
-  const js = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8') + viewerSrc;
+  const js = fs.readFileSync(path.join(root, 'assets/ui.js'), 'utf8') + viewerSrc + bootSrc;
   for (const sink of ['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'document.write']) {
     assert.ok(!html.includes(sink) && !js.includes(sink), `found ${sink}`);
   }
@@ -112,8 +114,9 @@ test('2D plan svg is not touch-locked (mobile users can scroll over it)', () => 
 });
 
 test('plan viewBox is computed from the measured bounding box', () => {
-  assert.ok(!html.includes('"-34 -32 76 68"'), 'hardcoded viewBox still present');
-  assert.match(html, /m\.bbox_min\[0\]\s*-\s*pad[\s\S]{0,160}viewBox/, 'viewBox no longer derives from model data');
+  const pageCode = html + '\n' + bootSrc;
+  assert.ok(!pageCode.includes('"-34 -32 76 68"'), 'hardcoded viewBox still present');
+  assert.match(pageCode, /m\.bbox_min\[0\]\s*-\s*pad[\s\S]{0,160}viewBox/, 'viewBox no longer derives from model data');
 });
 
 test('model.json measurements stay inside the stated limits', () => {
@@ -144,4 +147,28 @@ test('python tools stay syntactically valid', () => {
   for (const rel of ['generate_keyring.py', 'tools/inspect_cad.py']) {
     assert.doesNotThrow(() => execFileSync('python3', ['-m', 'py_compile', path.join(root, rel)]), `${rel} failed py_compile`);
   }
+});
+
+test('CSP meta locks the page to self-hosted resources and forbids plugin objects', () => {
+  const m = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/);
+  assert.ok(m, 'index.html is missing a Content-Security-Policy meta tag');
+  for (const d of ["default-src 'none'", "script-src 'self'", "connect-src 'self'", "object-src 'none'", "form-action 'none'"]) {
+    assert.ok(m[1].includes(d), 'CSP is missing ' + d);
+  }
+  const inlineScripts = html.match(/<script>([\s\S]*?)<\/script>/g) || [];
+  assert.deepEqual(inlineScripts, [], 'inline scripts are forbidden by script-src self');
+  const staticSrcs = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((s) => s[1]);
+  assert.ok(staticSrcs.length >= 2, 'expected module script tags for boot and lab-ui');
+  for (const src of staticSrcs) {
+    assert.ok(!/^https?:\/\//.test(src) && !src.startsWith('//'), 'script ' + src + ' is outside the self-only CSP script-src');
+  }
+  const inlineHandlers = html.match(/\son[a-z]+\s*=/g) || [];
+  assert.deepEqual(inlineHandlers, [], 'CSP cannot express inline handler permissions');
+});
+
+test('boot module exists as a self-hosted file and carries the extracted page script', () => {
+  assert.match(bootSrc, /from "\.\/viewer\.js"/, 'boot.js must import viewer.js relative to assets/');
+  assert.match(bootSrc, /from "\.\/ui\.js"/, 'boot.js must import ui.js relative to assets/');
+  assert.match(html, /<script type="module" src="\.\/assets\/boot\.js"><\/script>/, 'index.html must load assets/boot.js');
+  assert.match(html, /<link rel="modulepreload" href="assets\/boot\.js">/, 'index.html must modulepreload assets/boot.js');
 });

@@ -247,7 +247,7 @@ test('sweep uses the 10 to 150 N grid with at least 10 points', () => {
 
 /* ---------- CSV formula safety ---------- */
 
-const injections = ['=1+1', '+2', '-3', '@x', '\t=1', '\r=1', ' =1', '  =1', ' \t=1', '=SUM(A1)', '- 1', '+cmd'];
+const injections = ['=1+1', '+2', '-3x', '@x', '\t=1', '\r=1', ' =1', '  =1', ' \t=1', '=SUM(A1)', '- 1', '+cmd'];
 injections.forEach((s) => {
   test(`csvCell prefixes dangerous content ${JSON.stringify(s)}`, () => {
     const out = lab.csvCell(s);
@@ -257,9 +257,10 @@ injections.forEach((s) => {
 });
 
 test('csvCell leaves safe content untouched', () => {
-  for (const s of ['abc', 'x=1', ' a', '123', 'PLA (FDM)', 'sha256']) {
+  for (const s of ['abc', 'x=1', '123', 'PLA (FDM)', 'sha256']) {
     assert.equal(lab.csvCell(s), s);
   }
+  assert.equal(lab.csvCell(' a'), "' a");
 });
 test('csvCell quotes and doubles quotes correctly', () => {
   assert.equal(lab.csvCell('a,b'), '"a,b"');

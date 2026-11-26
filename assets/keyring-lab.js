@@ -501,12 +501,10 @@ function buildBriefPayload(model, state) {
 
 export function csvCell(v) {
   let s = String(v);
-  const danger = new Set(["=", "+", "-", "@", "\t", "\r", "\n"]);
-  for (const ch of s) {
-    if (ch === " ") continue;
-    if (danger.has(ch)) s = "'" + s;
-    break;
-  }
+  const lead = (/^[\s\p{Cf}\p{Cc}]*/u.exec(s) || [""])[0];
+  const first = s.charAt(lead.length);
+  const plainNumber = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s.slice(lead.length));
+  if (lead.length > 0 || (first !== "" && "=+-@".indexOf(first) !== -1 && !(first === "-" && plainNumber))) s = "'" + s;
   if (/[",\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`;
   return s;
 }
@@ -700,7 +698,7 @@ export function selfChecks(model) {
 
   // CSV formula injection
   const cellText = (s) => (s.startsWith('"') ? s.slice(1, -1) : s);
-  const inj = ["=1+1", "+cmd", "-2", "@sum", "\t=1", " =1", "\r=2"];
+  const inj = ["=1+1", "+cmd", "-2x", "@sum", "\t=1", " =1", "\r=2"];
   add("csv-formula", "CSV cells resist formula injection including leading-space attacks",
     inj.every((s) => cellText(csvCell(s)).startsWith("'")) && csvCell("safe text") === "safe text");
 

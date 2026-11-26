@@ -73,7 +73,7 @@ async function init() {
     rowsEl.replaceChildren(...metrics.map((m) => {
       const tr = h("tr", {
         "data-key": m.proc.key, tabindex: "0",
-        "aria-selected": m.proc.key === state.p ? "true" : "false",
+        class: m.proc.key === state.p ? "is-selected" : "",
       },
         h("td", {}, h("span", { class: "proc-swatch", style: `background:${PROC_COLOR[m.proc.key]}` }), " ", m.proc.label),
         h("td", { class: "num", text: fmt(m.massG, 2) }),
